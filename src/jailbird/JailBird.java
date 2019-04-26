@@ -69,67 +69,6 @@ public class JailBird {
 		
 		frame.setVisible(true);
 	}
-	
-	public static void run() throws InterruptedException {
-		while (true) {
-			//if running
-			if (running) {
-				if (!applicationFound)
-					target();
-				
-				if (applicationFound) {
-					label.setForeground(Color.RED);
-					label.setText("Running");
-					
-					User32 user32 = User32.instance;  
-		            HWND hWnd = user32.FindWindow("ApplicationFrameWindow", "Sea of Thieves"); //ClassName, WindowName
-		            if (hWnd == null) {
-		            	running = false;
-		            	applicationFound = false;
-		            }
-		            user32.ShowWindow(hWnd, User32.SW_SHOW);  
-		            user32.SetForegroundWindow(hWnd);
-		            
-			    	Random rand = new Random();
-			    	int r = rand.nextInt(12)+1;
-			    	
-			    	switch (r) {
-			    		case 1:	robKeyHold('A');
-			    				break;
-			    		case 2:	robKeyHold('W');
-			    				break;
-			    		case 3:	robKeyHold('S');
-			    				break;
-			    		case 4:	robKeyHold('D');
-			    				break;
-			    		case 5:	robKeyPress('6');
-			    				break;
-			    		case 6:	robKeyPress('7');
-			    				break;
-			    		case 7:robKeyPress('8');
-								break;
-			    		case 8:robKeyPress('9');
-								break;
-			    		case 9:robKeyPress('0');
-								break;
-			    		case 10:robKeyPress('l');
-								break;
-			    		case 11:robKeyPress('b');
-								break;
-			    		case 12:robKeyPress('i');
-								break;
-			    	}
-			    	Thread.sleep(secDelay * 1000);
-				}
-			}
-			//if not running
-			if (!running) {
-				label.setForeground(Color.BLACK);
-				label.setText("Standby");
-			}
-		}
-	}
-	
 	public static class Start implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			running = true;
@@ -141,18 +80,135 @@ public class JailBird {
 		}
 	}
 	
-	public static void target() {
-		logBuilder("Searching for Sea of Thieves");
+	public static void run() throws InterruptedException {
+		long previousTime = System.currentTimeMillis();
 		
-		HWND find = User32.instance.FindWindow("ApplicationFrameWindow", "Sea of Thieves");
-		if (find == null) {
-			applicationFound = false;
-			logBuilder("Can not find Sea of Thieves");
-			running = false;
+		while (true) {
+			//if running
+			if (running) {
+				if (applicationFound) {
+					
+					if (System.currentTimeMillis() >= previousTime + 4000) {
+						System.out.println("here");
+						label.setForeground(Color.RED);
+						label.setText("Running");
+						
+						boolean target = target();
+						if (target) {
+							Random rand = new Random();
+					    	int r = rand.nextInt(15)+1;
+					    	
+					    	switch (r) {
+					    		//Left
+					    		case 1:	
+					    				logBuilder("Walking Left");
+					    				robKeyHold('A');
+					    				break;
+			    				//Forwards
+					    		case 2:	
+				    					logBuilder("Walking Forward");
+					    				robKeyHold('W');
+					    				break;
+			    				//Backwards
+					    		case 3:	
+				    					logBuilder("Walking Backward");
+					    				robKeyHold('S');
+					    				break;
+			    				//Right
+					    		case 4:	
+				    					logBuilder("Walking Right");
+					    				robKeyHold('D');
+					    				break;
+			    				//Pocket Watch
+					    		case 5: 
+				    					logBuilder("Pulled Out Pocket Watch");
+					    				robKeyPress('0');
+										break;
+								//Primary Weapon
+					    		case 7: 
+				    					logBuilder("Pulled Out Primary Weapon");
+					    				robKeyPress('1');
+										break;
+								//Secondary Weapon
+					    		case 8: 
+				    					logBuilder("Pulled Out Secondary Weapon");
+					    				robKeyPress('2');
+					    				break;
+			    				//Shovel
+					    		case 9:	
+				    					logBuilder("Pulled Out Shovel");
+					    				robKeyPress('6');	
+					    				break;
+			    				//Compass
+					    		case 10:
+				    					logBuilder("Pulled Out Compass");
+					    				robKeyPress('7');
+					    				break;
+			    				//Spyglass
+					    		case 11:
+				    					logBuilder("Pulled Out Spyglass");
+					    				robKeyPress('8');
+										break;
+								//Tankard
+					    		case 12:
+				    					logBuilder("Pulled Out Tankard");
+					    				robKeyPress('9');
+										break;
+								//Lantern
+					    		case 13:
+				    					logBuilder("Pulled Out Lantern");
+					    				robKeyPress('l');
+										break;
+								//Bucket
+					    		case 14:
+				    					logBuilder("Pulled Out Bucket");
+					    				robKeyPress('b');
+										break;
+								//Instrument
+					    		case 15:
+				    					logBuilder("Pulled Out Instrument");
+					    				robKeyPress('i');
+										break;
+					    	}
+						}
+				    	
+						previousTime = System.currentTimeMillis();
+					}
+				}
+				
+				else if (!applicationFound) {
+					logBuilder("Searching for Sea of Thieves");
+					boolean target = target();
+					if (target) {
+						applicationFound = true;
+						logBuilder("Connected to Sea of Thieves");
+					}
+					else {
+						applicationFound = false;
+						running = false;
+						logBuilder("Can not find Sea of Thieves");
+					}
+				}
+			}
+			
+			//if not running
+			else if (!running) {
+				label.setForeground(Color.BLACK);
+				label.setText("Standby");
+			}
 		}
+	}
+	
+	//User32 Utility
+	public static boolean target() {
+		User32 user32 = User32.instance;
+		HWND window = user32.FindWindow("ApplicationFrameWindow", "Sea of Thieves"); //ClassName, WindowName
+		if (window == null)
+			return false;
 		else {
-			applicationFound = true;
-			logBuilder("Connected to Sea of Thieves");
+            user32.ShowWindow(window, User32.SW_SHOW);  
+            user32.SetForegroundWindow(window);
+			return true;
 		}
 	}
 	public interface User32 extends W32APIOptions {
@@ -163,6 +219,7 @@ public class JailBird {
         int SW_SHOW = 1;
     }
 	
+	//Console Utility
 	public static void logBuilder(String st) {
 		if (index < 7)
 			log[index] = st;
@@ -179,9 +236,8 @@ public class JailBird {
 			index++;
 	}
 	
+	//Robot Utility
 	public static void robKeyPress(char c) throws InterruptedException {
-		logBuilder(c + " is pressed");
-		
 		try {
 			Robot robot = new Robot();
 			robot.keyPress(c);
@@ -193,17 +249,15 @@ public class JailBird {
     }
     
     public static void robKeyHold(char c) throws InterruptedException {
-    	logBuilder(c + " is being held for 1 second");
-    	
-    	long i = System.currentTimeMillis();
-    	while (true) {
+    	long previousTime = System.currentTimeMillis();
+    	boolean loop = true;
+    	while (loop) {
 	    	try {
 				Robot robot = new Robot();
 				robot.keyPress(c);
-				if (System.currentTimeMillis() >= i+1000) {
+				if (System.currentTimeMillis() >= previousTime + 500) {
 					robot.keyRelease(c);
-					logBuilder(c + " is released");
-					break;
+					loop = false;
 				}
 			} 
 	    	catch (AWTException e) {
